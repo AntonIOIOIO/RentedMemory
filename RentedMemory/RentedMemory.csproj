@@ -9,7 +9,7 @@
     <Authors>AntonChristiansen</Authors>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <Version>1.0.2-alpha</Version>
+    <Version>1.0.3</Version>
     <PackageProjectUrl>https://github.com/AntonIOIOIO/RentedMemory</PackageProjectUrl>
     <RepositoryUrl>https://github.com/AntonIOIOIO/RentedMemory</RepositoryUrl>
   </PropertyGroup>

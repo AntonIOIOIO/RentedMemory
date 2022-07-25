@@ -2,11 +2,26 @@
 
 public sealed class RentedMemoryBuilder<T> where T : struct, IEquatable<T>
 {
-    private static readonly byte PooledItemsSize = 16;
-    private static readonly RentedMemoryBuilder<T>[] PooledItems = new RentedMemoryBuilder<T>[PooledItemsSize];
+    private static readonly RentedObjects<RentedMemoryBuilder<T>> RentedObjects = new(MaxPooledItemsSize: 16);
 
     private RentedMemory<T> RentedArray;
     private int WrittenCount;
+
+    public static RentedMemoryBuilder<T> Rent(long MinimumSize = default) => Rent(RentedMemory<T>.Rent(MinimumSize));
+    public static RentedMemoryBuilder<T> Rent(int MinimumSize = default) => Rent(RentedMemory<T>.Rent(MinimumSize));
+
+    public static RentedMemoryBuilder<T> Rent(RentedMemory<T> RentedArray = default)
+    {
+        RentedMemoryBuilder<T>? RentedMemoryBuilder = RentedObjects.Rent();
+
+        if (RentedMemoryBuilder is null)
+            return new RentedMemoryBuilder<T>(RentedArray);
+        else
+            RentedMemoryBuilder.RentedArray = RentedArray;
+
+        return RentedMemoryBuilder;
+    }
+
 
     public Memory<T> WrittenMemory => RentedArray.Memory[..WrittenCount];
     public Span<T> WrittenSpan => RentedArray.Span[..WrittenCount];
@@ -19,27 +34,6 @@ public sealed class RentedMemoryBuilder<T> where T : struct, IEquatable<T>
     public void AdvanceRemaining(int WrittenCount) => this.WrittenCount += WrittenCount;
 
     public void Reset() => WrittenCount = 0;
-
-    public static RentedMemoryBuilder<T> Rent(long MinimumSize = default) => Rent(RentedMemory<T>.Rent(MinimumSize));
-    public static RentedMemoryBuilder<T> Rent(int MinimumSize = default) => Rent(RentedMemory<T>.Rent(MinimumSize));
-
-
-    public static RentedMemoryBuilder<T> Rent(RentedMemory<T> RentedArray = default)
-    {
-        for (byte i = 0; i < PooledItemsSize; i++)
-        {
-            RentedMemoryBuilder<T>? RentedMemoryBuilder = Interlocked.Exchange(ref PooledItems[i]!, null);
-
-            if (RentedMemoryBuilder is not null)
-            {
-                RentedMemoryBuilder.RentedArray = RentedArray;
-                return RentedMemoryBuilder;
-            }
-        }
-
-        return new RentedMemoryBuilder<T>(RentedArray);
-    }
-
   
 
     public void Return()
@@ -51,10 +45,7 @@ public sealed class RentedMemoryBuilder<T> where T : struct, IEquatable<T>
         }
 
         Reset();
-
-        for (byte i = 0; i < PooledItemsSize; i++)
-            if (Interlocked.CompareExchange(ref PooledItems[i], this, null) is null)
-                return;
+        RentedObjects.Return(this);
     }
 
     public void Return(out RentedMemory<T> RentedArray)
@@ -62,7 +53,8 @@ public sealed class RentedMemoryBuilder<T> where T : struct, IEquatable<T>
         RentedArray = this.RentedArray;
         this.RentedArray = default;
 
-        Return();
+        Reset();
+        RentedObjects.Return(this);
     }
 
     public void EnsureSize(long MinimumSize) => EnsureSize((int)MinimumSize);
@@ -142,6 +134,4 @@ public sealed class RentedMemoryBuilder<T> where T : struct, IEquatable<T>
             }
         }
     }
-
-
 }

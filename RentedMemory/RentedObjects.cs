@@ -3,7 +3,10 @@
 
 public sealed class RentedObjects<T> where T : class
 {
+    private static RentedObjects<T>? SharedPool;
     private readonly T?[] PooledItems;
+
+    public static RentedObjects<T> Shared => SharedPool ??= new RentedObjects<T>(MaxPooledItemsSize: 64);
 
     public RentedObjects(int MaxPooledItemsSize) => PooledItems = new T[MaxPooledItemsSize];
 

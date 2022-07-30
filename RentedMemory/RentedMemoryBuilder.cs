@@ -2,7 +2,7 @@
 
 public sealed class RentedMemoryBuilder<T> where T : struct, IEquatable<T>
 {
-    private static readonly RentedObjects<RentedMemoryBuilder<T>> RentedObjects = new(MaxPooledItemsSize: 16);
+    private static readonly RentedObjects<RentedMemoryBuilder<T>> RentedObjects = RentedObjects<RentedMemoryBuilder<T>>.Shared;
 
     private RentedMemory<T> RentedArray;
     private int WrittenCount;

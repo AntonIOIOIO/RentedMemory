@@ -1,9 +1,9 @@
 # RentedMemory
 
-RentedMemory is library that builds on ArrayPool to make it explicit that you are using a rented array and adds some functionality.
+RentedMemory is a library that builds on ArrayPool to make it explicit that you are using a rented array and adds some functionality.
 
 Includes:
--	RentedMemory is a readonly struct wrapper around ArrayPool use it kinda like dispose pattern.
+-	RentedMemory is a readonly struct wrapper around ArrayPool used kinda like dispose pattern.
 -	RentedMemoryBuilder is a StringBuilder alternative with zero allocation (pooled) and works on any struct.
 -	RentedObjects is a lightweight objectpool where you create the objects yourself.
 

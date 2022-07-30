@@ -9,9 +9,16 @@
     <Authors>AntonChristiansen</Authors>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <Version>1.0.3</Version>
+    <Version>1.0.4</Version>
     <PackageProjectUrl>https://github.com/AntonIOIOIO/RentedMemory</PackageProjectUrl>
     <RepositoryUrl>https://github.com/AntonIOIOIO/RentedMemory</RepositoryUrl>
+    <Description>RentedMemory is a library that builds on ArrayPool to make it explicit that you are using a rented array and adds some functionality.
+
+Includes:
+- RentedMemory is a readonly struct wrapper around ArrayPool used kinda like dispose pattern.
+- RentedMemoryBuilder is a StringBuilder alternative with zero allocation (pooled) and works on any struct.
+- RentedObjects is a lightweight objectpool where you create the objects yourself.</Description>
+    <PackageTags>Rented;StringBuilder;Builder;String;Arrays;Array;Pool;ArrayPool;Byte;Bytes;Shared</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

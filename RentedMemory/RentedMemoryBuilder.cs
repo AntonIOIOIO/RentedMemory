@@ -1,9 +1,43 @@
 ﻿namespace System.Buffers;
 
+public static partial class Extensions
+{
+    #region IndexOf
+
+    public static int IndexOf(this RentedMemoryBuilder<char> RentedMemoryBuilder, ReadOnlySpan<char> Value, StringComparison StringComparison = StringComparison.OrdinalIgnoreCase)
+        => MemoryExtensions.IndexOf(RentedMemoryBuilder.WrittenSpan, Value, StringComparison);
+
+    public static int IndexOf<T>(this RentedMemoryBuilder<T> RentedMemoryBuilder, ReadOnlySpan<T> Value) where T : struct, IEquatable<T>
+       => RentedMemoryBuilder.WrittenSpan.IndexOf(Value);
+
+    public static int IndexOf<T>(this RentedMemoryBuilder<T> RentedMemoryBuilder, T Value) where T : struct, IEquatable<T>
+       => RentedMemoryBuilder.WrittenSpan.IndexOf(Value);
+
+    public static int IndexOf<T>(this RentedMemoryBuilder<T> RentedMemoryBuilder, T Value, int StartIndex) where T : struct, IEquatable<T>
+    {
+        int Index = RentedMemoryBuilder.WrittenSpan[StartIndex..].IndexOf(Value);
+        return Index == -1 ? Index : Index + StartIndex;
+    }
+
+    #endregion
+
+    #region Contains
+
+    public static bool Contains(this RentedMemoryBuilder<char> RentedMemoryBuilder, ReadOnlySpan<char> Value, StringComparison StringComparison = StringComparison.OrdinalIgnoreCase)
+      => MemoryExtensions.Contains(RentedMemoryBuilder.WrittenSpan, Value, StringComparison);
+
+    public static bool Contains<T>(this RentedMemoryBuilder<T> RentedMemoryBuilder, T Value) where T : struct, IEquatable<T> 
+        => RentedMemoryBuilder.WrittenSpan.Contains(Value);
+
+    public static bool Contains<T>(this RentedMemoryBuilder<T> RentedMemoryBuilder, ReadOnlySpan<T> Value) where T : struct, IEquatable<T> 
+        => RentedMemoryBuilder.WrittenSpan.IndexOf(Value) != -1;
+
+    #endregion
+
+}
+
 public sealed class RentedMemoryBuilder<T> where T : struct, IEquatable<T>
 {
-    private static readonly RentedObjects<RentedMemoryBuilder<T>> RentedObjects = RentedObjects<RentedMemoryBuilder<T>>.Shared;
-
     private RentedMemory<T> RentedArray;
     private int WrittenCount;
 
@@ -12,7 +46,7 @@ public sealed class RentedMemoryBuilder<T> where T : struct, IEquatable<T>
 
     public static RentedMemoryBuilder<T> Rent(RentedMemory<T> RentedArray = default)
     {
-        RentedMemoryBuilder<T>? RentedMemoryBuilder = RentedObjects.Rent();
+        RentedMemoryBuilder<T>? RentedMemoryBuilder = RentedObjects<RentedMemoryBuilder<T>>.RentFromSharedPool();
 
         if (RentedMemoryBuilder is null)
             return new RentedMemoryBuilder<T>(RentedArray);
@@ -45,7 +79,8 @@ public sealed class RentedMemoryBuilder<T> where T : struct, IEquatable<T>
         }
 
         Reset();
-        RentedObjects.Return(this);
+
+        RentedObjects<RentedMemoryBuilder<T>>.ReturnToSharedPool(this);
     }
 
     public void Return(out RentedMemory<T> RentedArray)
@@ -53,8 +88,7 @@ public sealed class RentedMemoryBuilder<T> where T : struct, IEquatable<T>
         RentedArray = this.RentedArray;
         this.RentedArray = default;
 
-        Reset();
-        RentedObjects.Return(this);
+        Return();
     }
 
     public void EnsureSize(long MinimumSize) => EnsureSize((int)MinimumSize);
@@ -73,9 +107,6 @@ public sealed class RentedMemoryBuilder<T> where T : struct, IEquatable<T>
 
         RentedArray = NewArray;
     }
-
-    public int IndexOf(ReadOnlySpan<T> Span) => WrittenSpan.IndexOf(Span);
-    public int IndexOf(T Value) => WrittenSpan.IndexOf(Value);
 
     public void Prepend(ReadOnlySpan<T> New) => Insert(0, New);
     public void Append(ReadOnlySpan<T> New) => Insert(WrittenCount, New);

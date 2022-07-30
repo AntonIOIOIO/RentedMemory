@@ -1,6 +1,5 @@
 ﻿namespace System.Buffers;
 
-
 public readonly struct RentedMemory<T> where T : struct, IEquatable<T>
 {
     private static readonly T[] Empty = Array.Empty<T>();
